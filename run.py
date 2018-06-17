@@ -9,10 +9,12 @@ def index():
 
 
 # http://127.0.0.1:5005/say_hello?name=Sunil
-@app.route('/say_hello', methods=['GET'])
+@app.route('/say_hello', methods=['GET', 'POST'])
 def say_hello():
     if request.method == 'GET':
-        return 'Hello, ' + request.args['name']
+        return '[GET] Hello, ' + request.args['name']
+    elif request.method == 'POST':
+        return '[POST] Hello, ' + request.form['name'] + ' Age ' + request.form['age']
 
 
 @app.route('/say_bye', methods=['GET'])
