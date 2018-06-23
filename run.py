@@ -1,4 +1,4 @@
-from flask import Flask, request, send_from_directory, jsonify
+from flask import Flask, request, send_from_directory, jsonify, render_template
 from pymongo import MongoClient
 
 app = Flask('Amazon')
@@ -22,12 +22,9 @@ def product():
         matching_products = db['products'].find(query)
 
         # return the first matching product
-        for p in matching_products:
-            p['_id'] = str(p['_id'])
-            return jsonify(p)
-
-        # this return will be used when there are no matches
-        return 'no product found'
+        return render_template('results.html',
+                               query=query['name'],
+                               results=list(matching_products))
     elif request.method == 'POST':
         # lets add and update here
         op_type = request.form['op_type']
