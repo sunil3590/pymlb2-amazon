@@ -19,16 +19,25 @@ def product():
                 return jsonify(prod)
         return 'No match'
     elif request.method == 'POST':
+        op_type = request.form['op_type']
         name = request.form['name']
         desc = request.form['desc']
         price = request.form['price']
-        prod = {
-            'name': name,
-            'desc':  desc,
-            'price': price
-        }
-        products.append(prod)
-        return send_from_directory('static', 'index.html')
+        if op_type == 'add':
+            prod = {
+                'name': name,
+                'desc':  desc,
+                'price': price
+            }
+            products.append(prod)
+            return send_from_directory('static', 'index.html')
+        elif op_type == 'update':
+            for prod in products:
+                if prod['name'] == name:
+                    prod['desc'] = desc
+                    prod['price'] = price
+                    return send_from_directory('static', 'index.html')
+            return 'product not found'
 
 
 if __name__ == '__main__':
