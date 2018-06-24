@@ -4,13 +4,7 @@ this means, adding routes and implementing the APIs
 """
 from amazon import app
 from flask import request, send_from_directory, render_template
-from pymongo import MongoClient
-
-
-# connect to mongodb server
-client = MongoClient('localhost', 27017)
-# select pymlb2-amazon database
-db = client['pymlb2-amazon']
+from amazon.models import product as product_model
 
 
 @app.route('/', methods=['GET'])
@@ -21,14 +15,13 @@ def index():
 @app.route('/api/product', methods=['GET', 'POST'])
 def product():
     if request.method == 'GET':
-        # lets search for the product here
-        query = {'name': request.args['name']}
-        matching_products = db['products'].find(query)
+        query_name = request.args['name']
+        matching_products = product_model.search_by_name(query_name)
 
         # return the first matching product
         return render_template('results.html',
-                               query=query['name'],
-                               results=list(matching_products))
+                               query=query_name,
+                               results=matching_products)
     elif request.method == 'POST':
         # lets add and update here
         op_type = request.form['op_type']
@@ -42,20 +35,19 @@ def product():
 
         if op_type == 'add':  # add the product here
             # insert to DB
-            db['products'].insert_one(prod)
+            product_model.add_product(prod)
 
             # take user back to index page
             return send_from_directory('static', 'index.html')
 
         elif op_type == 'update':  # update the product here
-            # create filter and update dicts
-            filter = {'name': request.form['name']}
-            update = {
-                '$set': prod
+            name = request.form['name']
+            updated_product = {
+                'name': name,
+                'desc': request.form['desc'],
+                'price': request.form['price']
             }
-
-            # update in DB
-            db['products'].update_one(filter=filter, update=update)
+            product_model.update_product(name, updated_product)
 
             # take user back to index page
             return send_from_directory('static', 'index.html')
