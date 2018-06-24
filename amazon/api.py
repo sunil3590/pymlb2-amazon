@@ -5,6 +5,7 @@ this means, adding routes and implementing the APIs
 from amazon import app
 from flask import request, send_from_directory, render_template
 from amazon.models import product as product_model
+from amazon.models import user as user_model
 
 
 @app.route('/', methods=['GET'])
@@ -37,8 +38,8 @@ def product():
             # insert to DB
             product_model.add_product(prod)
 
-            # take user back to index page
-            return send_from_directory('static', 'index.html')
+            # take user back to admin page
+            return send_from_directory('static', 'admin.html')
 
         elif op_type == 'update':  # update the product here
             name = request.form['name']
@@ -49,5 +50,61 @@ def product():
             }
             product_model.update_product(name, updated_product)
 
-            # take user back to index page
+            # take user back to admin page
+            return send_from_directory('static', 'admin.html')
+
+
+@app.route('/api/user', methods=['POST'])
+def user():
+    # to login and signup
+    op_type = request.form['op_type']
+
+    if op_type == 'login':
+        username = request.form['username']
+        password = request.form['password']
+        success = user_model.authenticate(username, password)
+        if success:
+            return send_from_directory('static', 'home.html')
+        else:
             return send_from_directory('static', 'index.html')
+    elif op_type == 'signup':
+        name = request.form['name']
+        username = request.form['username']
+        password = request.form['password']
+        success = user_model.signup_user(name, username, password)
+        if success:
+            return send_from_directory('static', 'home.html')
+        else:
+            return send_from_directory('static', 'index.html')
+    else:
+        # take user back to admin page
+        return send_from_directory('static', 'index.html')
+
+
+
+
+    # read data from request and store in a dict
+    prod = {
+        'name': request.form['name'],
+        'desc': request.form['desc'],
+        'price': request.form['price']
+    }
+
+    if op_type == 'add':  # add the product here
+        # insert to DB
+        product_model.add_product(prod)
+
+        # take user back to admin page
+        return send_from_directory('static', 'admin.html')
+
+    elif op_type == 'update':  # update the product here
+        name = request.form['name']
+        updated_product = {
+            'name': name,
+            'desc': request.form['desc'],
+            'price': request.form['price']
+        }
+        product_model.update_product(name, updated_product)
+
+        # take user back to admin page
+        return send_from_directory('static', 'admin.html')
