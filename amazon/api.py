@@ -3,16 +3,24 @@ do the actual configureation of flask app here
 this means, adding routes and implementing the APIs
 """
 from amazon import app
-from flask import request, send_from_directory, render_template
+from flask import request, session, render_template
 from amazon.models import product as product_model
 from amazon.models import user as user_model
 
 
+# this is the index page of our website
 @app.route('/', methods=['GET'])
 def index():
-    return send_from_directory('static', 'index.html')
+    return render_template('index.html', message='10% off with PayPal')
 
 
+# this is the entry point for administrators
+@app.route('/admin', methods=['GET'])
+def admin():
+    return render_template('admin.html', message='Welcome admin')
+
+
+# API related to products - add, delete, update, get/search
 @app.route('/api/product', methods=['GET', 'POST'])
 def product():
     if request.method == 'GET':
@@ -39,7 +47,7 @@ def product():
             product_model.add_product(prod)
 
             # take user back to admin page
-            return send_from_directory('static', 'admin.html')
+            return render_template('admin.html', message='Successfully added')
 
         elif op_type == 'update':  # update the product here
             name = request.form['name']
@@ -51,9 +59,10 @@ def product():
             product_model.update_product(name, updated_product)
 
             # take user back to admin page
-            return send_from_directory('static', 'admin.html')
+            return render_template('admin.html', message='Successfully updated')
 
 
+# API related to users - login, signup
 @app.route('/api/user', methods=['POST'])
 def user():
     # to login and signup
@@ -64,47 +73,44 @@ def user():
         password = request.form['password']
         success = user_model.authenticate(username, password)
         if success:
-            return send_from_directory('static', 'home.html')
+            user_details = user_model.search_by_username(username)
+            # save the user_id in the session for use in future requests
+            # convert the _id from ObjectId to str
+            session['user_id'] = str(user_details['_id'])
+            return render_template('home.html', name=user_details['name'])
         else:
-            return send_from_directory('static', 'index.html')
+            return render_template('index.html', message='Invalid username/password')
     elif op_type == 'signup':
         name = request.form['name']
         username = request.form['username']
         password = request.form['password']
         success = user_model.signup_user(name, username, password)
         if success:
-            return send_from_directory('static', 'home.html')
+            user_details = user_model.search_by_username(username)
+            # save the user_id in the session for use in future requests
+            # convert the _id from ObjectId to str
+            session['user_id'] = str(user_details['_id'])
+            return render_template('home.html', name=user_details['name'])
         else:
-            return send_from_directory('static', 'index.html')
+            return render_template('index.html', message='username already exists')
     else:
         # take user back to admin page
-        return send_from_directory('static', 'index.html')
+        return render_template('index.html', message='Something went wrong')
 
 
-
-
-    # read data from request and store in a dict
-    prod = {
-        'name': request.form['name'],
-        'desc': request.form['desc'],
-        'price': request.form['price']
-    }
-
-    if op_type == 'add':  # add the product here
-        # insert to DB
-        product_model.add_product(prod)
-
-        # take user back to admin page
-        return send_from_directory('static', 'admin.html')
-
-    elif op_type == 'update':  # update the product here
-        name = request.form['name']
-        updated_product = {
-            'name': name,
-            'desc': request.form['desc'],
-            'price': request.form['price']
-        }
-        product_model.update_product(name, updated_product)
-
-        # take user back to admin page
-        return send_from_directory('static', 'admin.html')
+# API related to cart - add to cart, remove from cart, view cart
+@app.route('/api/cart', methods=['POST'])
+def cart():
+    # add / delete / retrieve
+    op_type = request.form['op_type']
+    if op_type == 'add':
+        product_id = request.form['product_id']
+        user_id = session['user_id']
+        user_model.add_to_cart(user_id, product_id)
+        user_details = user_model.search_by_userid(user_id)
+        return render_template('home.html', name=user_details['name'])
+    elif op_type == 'delete':
+        product_id = request.form['product_id']
+        user_model.delete_from_cart(session['user_id'], product_id)
+    elif op_type == 'retrieve':
+        user_model.retrieve_cart(session['user_id'])
