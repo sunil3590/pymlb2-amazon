@@ -50,6 +50,7 @@ def product():
             return render_template('admin.html', message='Successfully added')
 
         elif op_type == 'update':  # update the product here
+            # TODO - update product using _id
             name = request.form['name']
             updated_product = {
                 'name': name,

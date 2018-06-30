@@ -1,13 +1,13 @@
-<h1>{{ results|length }} results for "{{ query }}"</h1>
+<h1>{{ products|length }} products for "{{ query }}"</h1>
 
-{% for result in results %}
+{% for product in products %}
     <div>
-        <b>{{ result.name }}</b><br>
-        Description : <b>{{ result.desc }}</b><br>
-        Price : <i>{{ result.price }}</i><br>
+        <b>{{ product.name }}</b><br>
+        Description : <b>{{ product.desc }}</b><br>
+        Price : <i>{{ product.price }}</i><br>
         <form action="/api/cart" method="post">
             <input type="text" name="op_type" value="add" hidden>
-            <input type="text" name="product_id" value="{{ result._id }}" hidden>
+            <input type="text" name="product_id" value="{{ product._id }}" hidden>
             <input type="submit" value="Add to cart">
         </form>
         <hr>
