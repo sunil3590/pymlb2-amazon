@@ -77,8 +77,23 @@ def add_to_cart(user_id, product_id):
 
 
 def delete_from_cart(user_id, product_id):
-    # TODO
-    pass
+    condition = {'_id': ObjectId(user_id)}
+
+    cursor = db.users.find(condition)
+
+    if cursor.count() == 1:
+        user_data = cursor[0]
+    else:
+        # user id does not exist
+        return False
+
+    # remove from cart and update mongodb
+    if product_id not in user_data['cart']:
+        return False
+    user_data['cart'].remove(product_id)
+    db.users.update_one(filter=condition, update={'$set': user_data})
+
+    return True
 
 
 # return _id of products in a users cart
