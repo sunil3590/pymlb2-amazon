@@ -11,6 +11,18 @@ from amazon.models import user as user_model
 # this is the index page of our website
 @app.route('/', methods=['GET'])
 def index():
+    if 'user_id' in session:
+        user_details = user_model.search_by_userid(session['user_id'])
+        return render_template('home.html', name=user_details['name'])
+    else:
+        return render_template('index.html', message='10% off with PayPal')
+
+
+# this is to logout of our website
+@app.route('/logout', methods=['GET'])
+def logout():
+    print(session)
+    del session['user_id']
     return render_template('index.html', message='10% off with PayPal')
 
 
@@ -27,10 +39,13 @@ def product():
         query_name = request.args['name']
         matching_products = product_model.search_by_name(query_name)
 
+        # sort based on price
+        # matching_products.sort(key=lambda x: x['price'], reverse=False)
+
         # return the first matching product
         return render_template('results.html',
                                query=query_name,
-                               results=matching_products)
+                               products=matching_products)
     elif request.method == 'POST':
         # lets add and update here
         op_type = request.form['op_type']
@@ -104,9 +119,9 @@ def user():
 def cart():
     # add / delete / retrieve
     op_type = request.form['op_type']
+    user_id = session['user_id']
     if op_type == 'add':
         product_id = request.form['product_id']
-        user_id = session['user_id']
         user_model.add_to_cart(user_id, product_id)
         user_details = user_model.search_by_userid(user_id)
         return render_template('home.html', name=user_details['name'])
@@ -114,4 +129,14 @@ def cart():
         product_id = request.form['product_id']
         user_model.delete_from_cart(session['user_id'], product_id)
     elif op_type == 'retrieve':
-        user_model.retrieve_cart(session['user_id'])
+        cart_item_ids = user_model.retrieve_cart(user_id)
+
+        cart_items = []
+        for p_id in cart_item_ids:
+            cart_items.append(product_model.get_details(p_id))
+
+        user_details = user_model.search_by_userid(user_id)
+
+        return render_template('cart.html',
+                               products=cart_items,
+                               name=user_details['name'])

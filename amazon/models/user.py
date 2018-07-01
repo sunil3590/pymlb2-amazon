@@ -81,7 +81,15 @@ def delete_from_cart(user_id, product_id):
     pass
 
 
-# return all products in a users cart
+# return _id of products in a users cart
 def retrieve_cart(user_id):
-    # TODO
-    pass
+    condition = {'_id': ObjectId(user_id)}
+
+    cursor = db.users.find(condition)
+
+    if cursor.count() == 1:
+        user_data = cursor[0]
+        return user_data['cart']
+    else:
+        # user id does not exist
+        return False

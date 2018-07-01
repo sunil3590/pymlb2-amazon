@@ -1,4 +1,4 @@
-<h1>{{ products|length }} matches for "{{ query }}"</h1>
+<h1>{{ products|length }} items in {{ name }}'s cart</h1>
 
 {% for product in products %}
     <div>
@@ -6,9 +6,9 @@
         Description : <b>{{ product.desc }}</b><br>
         Price : <i>{{ product.price }}</i><br>
         <form action="/api/cart" method="post">
-            <input type="text" name="op_type" value="add" hidden>
+            <input type="text" name="op_type" value="delete" hidden>
             <input type="text" name="product_id" value="{{ product._id }}" hidden>
-            <input type="submit" value="Add to cart">
+            <input type="submit" value="Remove">
         </form>
         <hr>
     </div>
