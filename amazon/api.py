@@ -39,6 +39,7 @@ def admin():
 # API related to products - add, delete, update, get/search
 @app.route('/api/product', methods=['GET', 'POST'])
 def product():
+    # TODO :  login check
     if request.method == 'GET':
         query_name = request.args['name']
         matching_products = product_model.search_by_name(query_name)
@@ -63,16 +64,20 @@ def product():
         prod = {
             'name': request.form['name'],
             'desc': request.form['desc'],
-            'price': request.form['price']
+            'price': int(request.form['price'])
         }
 
         if op_type == 'add':  # add the product here
+            # TODO : admin check
+
             # insert to DB
             product_model.add_product(prod)
 
             # take user back to admin page
             return render_template('admin.html', message='Successfully added')
         elif op_type == 'update':  # update the product here
+            # TODO : admin check
+
             product_id = request.form['product_id']
 
             updated_product = dict()
@@ -88,6 +93,8 @@ def product():
             # take user back to admin page
             return render_template('admin.html', message='Successfully updated')
         elif op_type == 'delete':
+            # TODO : check admin
+
             product_id = request.form['product_id']
             product_model.delete_product(product_id)
 
@@ -173,9 +180,13 @@ def cart():
         cart_item_ids = user_model.retrieve_cart(user_id)
 
         cart_items = []
+        total = 0
         for p_id in cart_item_ids:
-            cart_items.append(product_model.get_details(p_id))
+            cart_item = product_model.get_details(p_id)
+            cart_items.append(cart_item)
+            total += cart_item['price']
 
         return render_template('cart.html',
                                products=cart_items,
-                               name=user_details['name'])
+                               name=user_details['name'],
+                               total=total)

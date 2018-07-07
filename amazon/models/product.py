@@ -25,13 +25,13 @@ def add_product(product):
 
 def update_product(product_id, updated_product):
     # create filter and update dicts
-    filter = {'_id': ObjectId(product_id)}
+    condition = {'_id': ObjectId(product_id)}
     update = {
         '$set': updated_product
     }
 
     # update in DB
-    db['products'].update_one(filter=filter, update=update)
+    db['products'].update_one(filter=condition, update=update)
 
 
 def delete_product(product_id):

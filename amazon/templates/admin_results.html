@@ -10,6 +10,14 @@
             <input type="text" name="product_id" value="{{ product._id }}" hidden>
             <input type="submit" value="Delete">
         </form>
+        <form action="/api/product" method="post">
+            <input type="text" name="op_type" value="update" hidden>
+            <input type="text" name="product_id" value="{{ product._id }}" hidden>
+            <input type="text" name="name" placeholder="new name">
+            <input type="text" name="desc" placeholder="new description">
+            <input type="number" name="price" placeholder="new price">
+            <input type="submit" value="Update">
+        </form>
         <hr>
     </div>
 {% endfor %}
