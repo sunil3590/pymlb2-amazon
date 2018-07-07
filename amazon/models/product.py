@@ -23,12 +23,16 @@ def add_product(product):
     db['products'].insert_one(product)
 
 
-def update_product(name, updated_product):
+def update_product(product_id, updated_product):
     # create filter and update dicts
-    filter = {'name': name}
+    filter = {'_id': ObjectId(product_id)}
     update = {
         '$set': updated_product
     }
 
     # update in DB
     db['products'].update_one(filter=filter, update=update)
+
+
+def delete_product(product_id):
+    db['products'].delete_one(filter={'_id': ObjectId(product_id)})

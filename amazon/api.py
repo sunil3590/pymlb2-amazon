@@ -13,7 +13,10 @@ from amazon.models import user as user_model
 def index():
     if 'user_id' in session:
         user_details = user_model.search_by_userid(session['user_id'])
-        return render_template('home.html', name=user_details['name'])
+        if 'is_admin' in session and session['is_admin']:
+            return render_template('admin.html', name=user_details['name'])
+        else:
+            return render_template('home.html', name=user_details['name'])
     else:
         return render_template('index.html', message='10% off with PayPal')
 
@@ -22,6 +25,8 @@ def index():
 @app.route('/logout', methods=['GET'])
 def logout():
     del session['user_id']
+    if 'is_admin' in session:
+        del session['is_admin']
     return render_template('index.html', message='10% off with PayPal')
 
 
@@ -41,10 +46,15 @@ def product():
         # sort based on price
         # matching_products.sort(key=lambda x: x['price'], reverse=False)
 
-        # return the first matching product
-        return render_template('results.html',
-                               query=query_name,
-                               products=matching_products)
+        # return the matching products
+        if session['is_admin']:
+            return render_template('admin_results.html',
+                                   query=query_name,
+                                   products=matching_products)
+        else:
+            return render_template('results.html',
+                                   query=query_name,
+                                   products=matching_products)
     elif request.method == 'POST':
         # lets add and update here
         op_type = request.form['op_type']
@@ -62,19 +72,26 @@ def product():
 
             # take user back to admin page
             return render_template('admin.html', message='Successfully added')
-
         elif op_type == 'update':  # update the product here
-            # TODO - update product using _id
-            name = request.form['name']
-            updated_product = {
-                'name': name,
-                'desc': request.form['desc'],
-                'price': request.form['price']
-            }
-            product_model.update_product(name, updated_product)
+            product_id = request.form['product_id']
+
+            updated_product = dict()
+            if request.form['name'] != '':
+                updated_product['name'] = request.form['name']
+            if request.form['desc'] != '':
+                updated_product['desc'] = request.form['desc']
+            if request.form['price'] != '':
+                updated_product['price'] = int(request.form['price'])
+
+            product_model.update_product(product_id, updated_product)
 
             # take user back to admin page
             return render_template('admin.html', message='Successfully updated')
+        elif op_type == 'delete':
+            product_id = request.form['product_id']
+            product_model.delete_product(product_id)
+
+            render_template('admin.html', message='Successfully deleted')
 
 
 # API related to users - login, signup
@@ -92,7 +109,12 @@ def user():
             # save the user_id in the session for use in future requests
             # convert the _id from ObjectId to str
             session['user_id'] = str(user_details['_id'])
-            return render_template('home.html', name=user_details['name'])
+            if username == 'admin':
+                session['is_admin'] = True
+                return render_template('admin.html', name=user_details['name'])
+            else:
+                session['is_admin'] = False
+                return render_template('home.html', name=user_details['name'])
         else:
             return render_template('index.html', message='Invalid username/password')
     elif op_type == 'signup':
@@ -105,7 +127,13 @@ def user():
             # save the user_id in the session for use in future requests
             # convert the _id from ObjectId to str
             session['user_id'] = str(user_details['_id'])
-            return render_template('home.html', name=user_details['name'])
+            if username == 'admin':
+                session['is_admin'] = True
+                return render_template('admin.html', name=user_details['name'])
+            else:
+                session['is_admin'] = False
+                return render_template('home.html', name=user_details['name'])
+
         else:
             return render_template('index.html', message='username already exists')
     else:

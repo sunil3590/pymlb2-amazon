@@ -1,0 +1,15 @@
+<h1>{{ products|length }} matches for "{{ query }}"</h1>
+
+{% for product in products %}
+    <div>
+        <b>{{ product.name }}</b><br>
+        Description : <b>{{ product.desc }}</b><br>
+        Price : <i>{{ product.price }}</i><br>
+        <form action="/api/product" method="post">
+            <input type="text" name="op_type" value="delete" hidden>
+            <input type="text" name="product_id" value="{{ product._id }}" hidden>
+            <input type="submit" value="Delete">
+        </form>
+        <hr>
+    </div>
+{% endfor %}
